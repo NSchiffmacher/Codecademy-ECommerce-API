@@ -32,7 +32,7 @@ const main = async () => {
                 image_url VARCHAR(200),
                 description TEXT,
 
-                price money NOT NULL,
+                price numeric NOT NULL,
                 remaining_in_stock integer DEFAULT 0
             );
         `);
