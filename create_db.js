@@ -98,7 +98,7 @@ const main = async () => {
             CREATE TABLE "order" (
                 "id" serial PRIMARY KEY,
                 "user_id" integer NOT NULL,
-                "created_at" date,
+                "created_at" timestamp,
                 "status" varchar(100)
             );
         `);
@@ -112,12 +112,12 @@ const main = async () => {
     try {
         process.stdout.write('   * Creating foreign keys... ');
         await db.query(`    
-            ALTER TABLE "cart_item" ADD FOREIGN KEY ("cart_id") REFERENCES "cart" ("id");
-            ALTER TABLE "cart_item" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
-            ALTER TABLE "cart" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-            ALTER TABLE "order_item" ADD FOREIGN KEY ("order_id") REFERENCES "order" ("id");
-            ALTER TABLE "order_item" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
-            ALTER TABLE "order" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+            ALTER TABLE "cart_item" ADD FOREIGN KEY ("cart_id") REFERENCES "cart" ("id") ON DELETE CASCADE;;
+            ALTER TABLE "cart_item" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id") ON DELETE CASCADE;;
+            ALTER TABLE "cart" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE;;
+            ALTER TABLE "order_item" ADD FOREIGN KEY ("order_id") REFERENCES "order" ("id") ON DELETE CASCADE;;
+            ALTER TABLE "order_item" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id") ON DELETE CASCADE;;
+            ALTER TABLE "order" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE;;
         `);
         console.log('OK !');
     } catch (e) {

@@ -5,7 +5,7 @@ const db = require('./db');
 
 const User = require('./models/User');
 const Product = require('./models/Product');
-const Order = require('./models/Product');
+const Order = require('./models/Order');
 
 const testUser = false;
 const testProduct = false;
@@ -125,28 +125,34 @@ describe('Testing the models', () => {
         if (!testOrder) return;
 
         // Create the user to attach the order to
-        const email = `test${Date.now()}@test.com`;
-        const password = `test${Date.now()}password`;
-        const user = await User.create(email, password);
+        let user = null;
 
-        const productA = await Product.create(`Product A`, 100.99, `Product A description`, '', 10);
-        const productB = await Product.create(`Product B`, 200.99, `Product B description`, '', 5);
+        let productA = null;
+        let productB = null;
 
         let order_id = null;
+
+        before(async () => {
+            user = await User.create(`test${Date.now()}@test.com`, `test${Date.now()}password`);
+            productA = await Product.create(`Product A`, 100.99, `Product A description`, '', 10);
+            productB = await Product.create(`Product B`, 200.99, `Product B description`, '', 5);
+        });
+
         it("creates a new order", async () => {
-            const order = await Order.create(user_id);
+            const order = await Order.create(user.id);
             order_id = order.id;
 
             expect(order).to.be.an.instanceOf(Order);
-            expect(order.user_id).to.equal(user_id);
+            expect(order.user_id).to.equal(user.id);
             expect(order.id).to.be.a('number');
+
         });
 
         it("gets an existing order by it's id", async () => {
             const order = await Order.getById(order_id);
 
             expect(order).to.be.an.instanceOf(Order);
-            expect(order.user_id).to.equal(user_id);
+            expect(order.user_id).to.equal(user.id);
         });
 
         it("adds a product to the order", async () => {
@@ -155,6 +161,7 @@ describe('Testing the models', () => {
             const result = await order.addProduct(productA, 5);
 
             expect(result).to.equal(true);
+            expect(order.items[0].quantity).to.equal(5);
         });
 
         it("adds a 2nd product to the order", async () => {
@@ -163,20 +170,43 @@ describe('Testing the models', () => {
             const result = await order.addProduct(productB, 2);
 
             expect(result).to.equal(true);
+            expect(order.items[1].quantity).to.equal(2);
         });
 
-        it("removes some quantity of a product from the order", async () => {
-            const order = await Order.getByUserId(user_id);
-            const product = await Product.getById(product_id);
+        it("finds the item in the oder", async () => {
+            const order = await Order.getById(order_id);
 
-            const result = await order.removeProduct(product, 2);
+            expect(order.items.length).to.equal(2);
+            expect(order.items[0].product_id).to.equal(productA.id);
+        });
+
+        it("removes some possible quantity of a product from the order", async () => {
+            const order = await Order.getById(order_id);
+            const result = await order.removeProduct(productA, 2);
 
             expect(result).to.equal(true);
+            expect(order.items.find(item => item.product_id === productA.id).quantity).to.equal(3);
+        });
+
+        it("removes some impossible quantity of a product from the order, expect removal", async () => {
+            const order = await Order.getById(order_id);
+            const result = await order.removeProduct(productB, 10);
+
+            expect(result).to.equal(false);
+            expect(order.items.length).to.equal(1);
         });
 
         it("deletes an order and returns true", async () => {
-            const product = await Product.getById(product_id);
-            const result = await product.delete();
+            const order = await Order.getById(order_id);
+            const result = await order.delete();
+            
+            expect(result).to.equal(true);
+        });
+
+        after(async () => {
+            await user.delete();
+            await productA.delete();
+            await productB.delete();
         });
     });
 });
