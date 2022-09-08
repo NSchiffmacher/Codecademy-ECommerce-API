@@ -5,6 +5,7 @@ const db = require('./db');
 
 const User = require('./models/User');
 const Product = require('./models/Product');
+const Order = require('./models/Product');
 
 const testUser = false;
 const testProduct = false;
@@ -119,4 +120,63 @@ describe('Testing the models', () => {
             expect(product).to.equal(null);
         });
     })
+
+    describe("Order", async () => {
+        if (!testOrder) return;
+
+        // Create the user to attach the order to
+        const email = `test${Date.now()}@test.com`;
+        const password = `test${Date.now()}password`;
+        const user = await User.create(email, password);
+
+        const productA = await Product.create(`Product A`, 100.99, `Product A description`, '', 10);
+        const productB = await Product.create(`Product B`, 200.99, `Product B description`, '', 5);
+
+        let order_id = null;
+        it("creates a new order", async () => {
+            const order = await Order.create(user_id);
+            order_id = order.id;
+
+            expect(order).to.be.an.instanceOf(Order);
+            expect(order.user_id).to.equal(user_id);
+            expect(order.id).to.be.a('number');
+        });
+
+        it("gets an existing order by it's id", async () => {
+            const order = await Order.getById(order_id);
+
+            expect(order).to.be.an.instanceOf(Order);
+            expect(order.user_id).to.equal(user_id);
+        });
+
+        it("adds a product to the order", async () => {
+            const order = await Order.getById(order_id);
+
+            const result = await order.addProduct(productA, 5);
+
+            expect(result).to.equal(true);
+        });
+
+        it("adds a 2nd product to the order", async () => {
+            const order = await Order.getById(order_id);
+
+            const result = await order.addProduct(productB, 2);
+
+            expect(result).to.equal(true);
+        });
+
+        it("removes some quantity of a product from the order", async () => {
+            const order = await Order.getByUserId(user_id);
+            const product = await Product.getById(product_id);
+
+            const result = await order.removeProduct(product, 2);
+
+            expect(result).to.equal(true);
+        });
+
+        it("deletes an order and returns true", async () => {
+            const product = await Product.getById(product_id);
+            const result = await product.delete();
+        });
+    });
 });
