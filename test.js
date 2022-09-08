@@ -6,8 +6,13 @@ const db = require('./db');
 const User = require('./models/User');
 const Product = require('./models/Product');
 
+const testUser = false;
+const testProduct = false;
+const testOrder = true;
+
 describe('Testing the models', () => {
     describe('User', () => {
+        if (!testUser) return;
         const email = `test${Date.now()}@test.com`;
         const password = `test${Date.now()}password`;
 
@@ -42,6 +47,8 @@ describe('Testing the models', () => {
     });
 
     describe("Product", () => {
+        if (!testProduct) return;
+
         const name = `A test product`;
         const price = 100.99;
         const description = `The description of the given test product, a very expensive one`;

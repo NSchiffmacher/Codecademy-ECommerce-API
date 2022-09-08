@@ -11,13 +11,11 @@ class Product {
     }
 
     static async create(name, price, description, image_url = '', remaining_in_stock = 0) {
-        const id = ((await db.query('SELECT MAX(id) FROM "product"')).rows[0].max || 0) + 1;
-
         const result = await db.query(`
-            INSERT INTO product (id, name, price, description, image_url, remaining_in_stock)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO product (name, price, description, image_url, remaining_in_stock)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING id, name, price, description, remaining_in_stock
-        `, [id, name, price, description, image_url, remaining_in_stock]);
+        `, [name, price, description, image_url, remaining_in_stock]);
 
         return new Product(result.rows[0].id, result.rows[0].name, result.rows[0].price, result.rows[0].description, result.rows[0].remaining_in_stock);
     }

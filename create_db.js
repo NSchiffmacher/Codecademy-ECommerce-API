@@ -11,7 +11,7 @@ const main = async () => {
         process.stdout.write('   * Creating table "user"... ');
         await db.query(`    
             CREATE TABLE "user" (
-                "id" integer PRIMARY KEY,
+                "id" serial PRIMARY KEY,
                 "email" varchar(100) UNIQUE,
                 "password" varchar(200)
             );
@@ -27,7 +27,7 @@ const main = async () => {
         process.stdout.write('   * Creating table "product"... ');
         await db.query(`    
             CREATE TABLE product (
-                id integer PRIMARY KEY,
+                id serial PRIMARY KEY,
                 name VARCHAR(200) NOT NULL,
                 image_url VARCHAR(200),
                 description TEXT,
@@ -47,7 +47,7 @@ const main = async () => {
         process.stdout.write('   * Creating table "cart_item"... ');
         await db.query(`    
             CREATE TABLE cart_item (
-                "id" integer PRIMARY KEY,
+                "id" serial PRIMARY KEY,
                 "cart_id" integer NOT NULL,
                 "product_id" integer NOT NULL,
                 "quantity" integer NOT NULL DEFAULT 0
@@ -64,7 +64,7 @@ const main = async () => {
         process.stdout.write('   * Creating table "cart"... ');
         await db.query(`    
             CREATE TABLE cart (
-                "id" integer PRIMARY KEY,
+                "id" serial PRIMARY KEY,
                 "user_id" integer NOT NULL
             );
         `);
@@ -79,7 +79,7 @@ const main = async () => {
         process.stdout.write('   * Creating table "order_item"... ');
         await db.query(`    
             CREATE TABLE order_item (
-                "id" integer PRIMARY KEY,
+                "id" serial PRIMARY KEY,
                 "order_id" integer NOT NULL,
                 "product_id" integer NOT NULL,
                 "quantity" integer NOT NULL DEFAULT 0
@@ -96,8 +96,10 @@ const main = async () => {
         process.stdout.write('   * Creating table "order"... ');
         await db.query(`    
             CREATE TABLE "order" (
-            "id" integer PRIMARY KEY,
-            "user_id" integer NOT NULL
+                "id" serial PRIMARY KEY,
+                "user_id" integer NOT NULL,
+                "created_at" date,
+                "status" varchar(100)
             );
         `);
         console.log('OK !');

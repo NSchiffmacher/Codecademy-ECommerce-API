@@ -9,15 +9,12 @@ class User {
     }
 
     static async create(email, password_raw) {
-        // Get next id
-        const id = ((await db.query('SELECT MAX(id) FROM "user"')).rows[0].max || 0) + 1;
-    
         const password = await bcrypt.hash(password_raw, 10);
         const result = await db.query(`
-            INSERT INTO "user" (id, email, password)
-            VALUES ($1, $2, $3)
+            INSERT INTO "user" (email, password)
+            VALUES ($1, $2)
             RETURNING id;
-        `, [id, email, password]);
+        `, [email, password]);
         return new User(Number(result.rows[0].id), email, password);
     }
 
