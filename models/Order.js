@@ -42,10 +42,18 @@ class Order {
 
     async addProduct(product, quantity) {
         try {
-            let order_item = await OrderItem.create(this.id, product.id, quantity);
-            this.items.push(order_item);
-            return true;
+            let orderItem = await OrderItem.getByOrderIdAndProductId(this.id, product.id);
+            if (orderItem != null) {
+                orderItem.quantity = orderItem.quantity + quantity;
+                await orderItem.save();
+            } else {
+                orderItem = await OrderItem.create(this.id, product.id, quantity);
+            }
+
+            this.items.push(orderItem);
+            return true; 
         } catch (e) {
+            throw e;
             return false;
         }
     }
@@ -69,7 +77,6 @@ class Order {
             `, [this.id]);
             return true;
         } catch (e) {
-            console.log(e)
             return false;
         }
     }

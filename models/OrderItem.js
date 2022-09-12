@@ -38,6 +38,18 @@ class OrderItem {
         return result.rows.map(row => new OrderItem(row.id, row.order_id, row.product_id, row.quantity));
     }
 
+    static async getByOrderIdAndProductId(order_id, product_id) {
+        const result = await db.query(`
+            SELECT * FROM order_item
+            WHERE order_id = $1 AND product_id = $2;
+        `, [order_id, product_id]);
+        if (result.rows.length > 0) {
+            return new OrderItem(result.rows[0].id, result.rows[0].order_id, result.rows[0].product_id, result.rows[0].quantity);
+        } else {
+            return null;
+        }
+    }
+
     async removeQuantityFromOrder(quantity) {
         this.quantity = this.quantity - quantity;
         if (this.quantity <= 0) {

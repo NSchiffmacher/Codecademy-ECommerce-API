@@ -6,10 +6,12 @@ const db = require('./db');
 const User = require('./models/User');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
+const Cart = require('./models/Cart');
 
-const testUser = false;
-const testProduct = false;
-const testOrder = true;
+const testUser      = false;
+const testProduct   = false;
+const testOrder     = false;
+const testCart      = true;
 
 describe('Testing the models', () => {
     describe('User', () => {
@@ -201,6 +203,112 @@ describe('Testing the models', () => {
             const result = await order.delete();
             
             expect(result).to.equal(true);
+        });
+
+        after(async () => {
+            await user.delete();
+            await productA.delete();
+            await productB.delete();
+        });
+    });
+
+    describe("Cart", async () => {
+        if (!testCart) return;
+
+        // Create the user to attach the cart to
+        let user = null;
+
+        let productA = null;
+        let productB = null;
+
+        let cart_id = null;
+
+        before(async () => {
+            user = await User.create(`test${Date.now()}@test.com`, `test${Date.now()}password`);
+            productA = await Product.create(`Product Z`, 50.99, `Product Z description`, '', 10);
+            productB = await Product.create(`Product Y`, 20.14, `Product Y description`, '', 5);
+        });
+
+        it("creates a cart for the user as none exist at the moment", async () => {
+            const cart = await Cart.get(user.id);
+            cart_id = cart.id;
+
+            expect(cart).to.be.an.instanceOf(Cart);
+            expect(cart.user_id).to.equal(user.id);
+            expect(cart.id).to.be.a('number');
+        });
+
+        it("gets a cart by it's id", async () => {
+            const cart = await Cart.getById(cart_id);
+
+            expect(cart).to.be.an.instanceOf(Cart);
+            expect(cart.user_id).to.equal(user.id);
+        })
+
+        it("gets the cart corresponding to our user", async () => {
+            const cart = await Cart.get(user.id);
+
+            expect(cart).to.be.an.instanceOf(Cart);
+            expect(cart.user_id).to.equal(user.id);
+            expect(cart.id).to.equal(cart_id);
+        });
+
+        it("returns null when accessing a cart for a user that doesnt exist", async () => {
+            const cart = await Cart.get(567842454545744234);
+
+            expect(cart).to.equal(null);
+        });
+
+        it("adds a product to the cart", async () => {
+            const cart = await Cart.get(user.id);
+
+            const result = await cart.addProduct(productA, 5);
+
+            expect(result).to.equal(true);
+            expect(cart.items[0].quantity).to.equal(5);
+        });
+
+        it("adds a 2nd product to the cart", async () => {
+            const cart = await Cart.get(user.id);
+
+            const result = await cart.addProduct(productB, 2);
+
+            expect(result).to.equal(true);
+            expect(cart.items[1].quantity).to.equal(2);
+        });
+
+        it("finds the item in the cart", async () => {
+            const cart = await Cart.get(user.id);
+
+            expect(cart.items.length).to.equal(2);
+            expect(cart.items[0].product_id).to.equal(productA.id);
+        });
+
+        it("removes some possible quantity of a product from the cart", async () => {
+            const cart = await Cart.get(user.id);
+            const result = await cart.removeProduct(productA, 2);
+
+            expect(result).to.equal(true);
+            expect(cart.items.find(item => item.product_id === productA.id).quantity).to.equal(3);
+        });
+
+        it("removes some impossible quantity of a product from the order, expect removal", async () => {
+            const cart = await Cart.get(user.id);
+            const result = await cart.removeProduct(productB, 10);
+
+            expect(result).to.equal(false);
+            expect(cart.items.length).to.equal(1);
+        });
+
+        it("transforms a cart to an order, removes the cart and returns the order", async () => {
+            const cart = await Cart.get(user.id);
+            const result = await cart.order();
+            
+            const cart_bis = await Cart.get(user.id);
+            
+            expect(cart_bis.items.length).to.equal(0);
+            expect(result).to.be.an.instanceOf(Order);
+            expect(result.items.length).to.equal(1);
         });
 
         after(async () => {
