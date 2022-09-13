@@ -1,0 +1,475 @@
+openapi: 3.0.3
+info:
+  title: E-Commerce App - Codecademy
+  version: 1.0.0
+  description: This API is part of a project on the Codecademy website
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: localhost:port/api/v1/
+tags:
+  - name: user
+    description: Operations about user
+  - name: products
+    description: Operations about the products
+  - name: orders
+    description: Operations about orders
+  - name: cart
+    description: Operations about the user's cart
+paths:
+  /user/register:
+    post:
+      tags:
+        - user
+      summary: Register a new user
+      description: Register a new user
+      operationId: registerUser
+      requestBody:
+        description: Register a new user on the site and login
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid email or password
+        '409':
+          description: Conflict - A user already exists with this email
+  /user/login:
+    post:
+      tags:
+        - user
+      summary: Login a user
+      description: Login a user
+      operationId: loginUser
+      requestBody:
+        description: Login a user
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          description: Wrong email or password
+  /user/password:
+    put:
+      tags:
+        - user
+      summary: Changes the user's password
+      description: Changes the user's password
+      operationId: changeUserPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeUserPassword'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid new password
+        '401':
+          description: Wrong email or old password
+        
+  /products:
+    summary: Get part of the products
+    description: Get part of the products
+    get:
+      summary: Get part of the products
+      description: >-
+        Will return part of all the available products based on a limit of
+        number and an offset
+      operationId: getProducts
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          required: false
+          description: The number of the first product to be returned
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+          required: false
+          description: The number of products to return
+          
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListProducts'
+      tags:
+        - products
+  /products/{id}:
+    summary: Get one product based on it's id 
+    description: Get one product based on it's id 
+    get:
+      summary: Get one product based on it's id 
+      description: >-
+        Will return one product based on it's id
+      operationId: getProductById
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The product's id 
+          
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  product:
+                    $ref: '#/components/schemas/Product'
+        '404': 
+          description: Product not found
+                    
+      tags:
+        - products
+        
+  /cart:
+    summary: Everything related to the cart
+    description: Everything related to the cart
+    get:
+      summary: Get the user's current cart
+      description: >-
+        Will return the content of the current user's cart
+      operationId: getUserCart
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Cart'
+        '401': 
+          description: The user isn't logged in and so doesn't have a cart
+        '404': 
+          description: Empty cart
+                    
+      tags:
+        - cart
+    post:
+      summary: Add new item(s) to the cart
+      description: >-
+        Will add one or more items to the cart
+      operationId: postToCart
+      requestBody:
+        description: Add one or more items to the cart
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCartItems'
+        
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Cart'
+        '401': 
+          description: The user isn't logged in and so doesn't have a cart
+        '404': 
+          description: Empty cart
+                    
+      tags:
+        - cart
+    delete:
+      summary: Empty the user's cart
+      description: >-
+        Remove all items from the cart
+      operationId: removeAllFromCart
+      responses:
+        '200':
+          description: Successful operation
+        '401': 
+          description: The user isn't logged in and so doesn't have a cart
+        '404': 
+          description: Empty cart
+                    
+      tags:
+        - cart
+    
+    put:
+      summary: Update/remove items from the cart
+      description: >-
+        Update the quantities in the current cart, if you want 
+        to remove an item simply use a quantity of 0
+      operationId: updateCart
+      requestBody:
+        description: Update one or more items to the cart (the items not included in the body won't be touched)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCartItems'
+      responses:
+        '200':
+          description: Successful operation
+        '401': 
+          description: The user isn't logged in and so doesn't have a cart
+        '404': 
+          description: One or more of the items isn't in the cart
+                    
+      tags:
+        - cart
+        
+  /cart/checkout:
+    summary: Checkout an order
+    description: Checkout an order
+    post:
+      summary: Checkout an order
+      description: >-
+        Will checkout on order, so transform a cart into an order 
+      operationId: checkoutOrder
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/Order'
+        '401': 
+          description: The user isn't logged in and so doesn't have orders
+        '400': 
+          description: Checkout failed
+                    
+      tags:
+        - orders
+        - cart
+    
+        
+  /orders:
+    summary: Everything related to the orders
+    description: Everything related to the orders
+    get:
+      summary: Get all the user's orders
+      description: >-
+        Will return all of the user's orders (with a limit)
+      operationId: getOrders
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          required: false
+          description: The number of the first order to be returned
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          required: false
+          description: The number of orders to return
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  offset:
+                    type: string
+                    example: 0
+                  number:
+                    type: string
+                    example: 10
+                  orders:
+                    type: array
+                    items: 
+                      $ref: '#/components/schemas/Order'
+        '401': 
+          description: The user isn't logged in and so doesn't have orders
+                    
+      tags:
+        - orders
+        
+  /orders/{id}:
+    summary: Get a single order
+    description: Get a single order
+    get:
+      summary: Get a single order
+      description: >-
+        Will return a single order based on it's id
+      operationId: getOrderById
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            default: 0
+          required: true
+          description: The id of the order to look for
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/Order'
+        '401': 
+          description: The user isn't logged in and so doesn't have orders
+        '403': 
+          description: The order belongs to an other user
+        '404':
+          description: Order not found
+                    
+      tags:
+        - orders
+      
+        
+        
+components:
+  schemas:
+    UserRegister:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: example@email.com
+        password:
+          type: string
+          format: password
+          example: azerty
+    ChangeUserPassword:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: example@email.com
+        old_password:
+          type: string
+          format: password
+          example: azerty
+        new_password:
+          type: string
+          format: password
+          example: real_strong_password
+        
+    ListProducts:
+      type: object
+      properties:
+        offset: 
+          type: integer
+          description: The number of the first item returned
+          example: 0
+        number: 
+          type: integer
+          description: The number of products returned
+          example: 50
+        products: 
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        name: 
+          type: string
+          example: Product name
+        image_url: 
+          type: string
+          example: "/products/images/image_product_12.jpg"
+        description: 
+          type: string
+          example: Product description
+        price: 
+          type: number
+          example: 12.99
+          description: in euros
+        available:
+          type: boolean
+          example: false
+    Cart:
+      type: object
+      properties:
+        user_email:
+          type: string
+          example: example@email.com
+        num_items:
+          type: integer
+          example: 10
+        cart_items:
+          type: array
+          items: 
+            $ref: '#/components/schemas/CartItem'
+    CartItem: 
+      type: object
+      properties:
+        product: 
+          $ref: '#/components/schemas/Product'
+        quantity: 
+          type: integer
+          example: 3
+    PostCartItems:
+      type: array
+      items:
+        type: object
+        properties:
+          product_id: 
+            type: integer
+            example: 1
+          quantity: 
+            type: integer
+            example: 5
+    Order:
+      type: object
+      properties:
+        id: 
+          type: integer
+          example: 4
+        created_at: 
+          type: number
+          example: 1663105386107
+        status:
+          type: string
+          example: pending
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+          
+  securitySchemes:
+    petstore_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://petstore3.swagger.io/oauth/authorize
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
